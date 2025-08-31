@@ -71,3 +71,11 @@ python manage.py train_item_factors
 python manage.py runserver
 
 ```
+
+## 8. Debugging Error Faced 
+Sometimes on windows machine you will get this kind of error 
+```bash
+error: Microsoft Visual C++ 14.0 or greater is required. Get it with "Microsoft C++ Build Tools": https://visualstudio.microsoft.com/visual-cpp-build-tools/
+```
+
+so you might need to install those to run successfully.

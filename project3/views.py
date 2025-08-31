@@ -69,7 +69,7 @@ def counterfactual(request):
             request, "project3/_cf_error.html", {"msg": "Train a model first."}
         )
 
-    df = utils.load_penguins().dropna()
+    df = utils.get_penguins_df().dropna()
 
     if request.method == "GET":
         form = CounterfactualForm(df=df)

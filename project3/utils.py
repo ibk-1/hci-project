@@ -12,7 +12,7 @@ from typing import Dict, Any
 import numpy as np
 import pandas as pd
 from django.conf import settings
-from palmerpenguins import load_penguins
+from palmerpenguins import load_penguins as _load_penguins_pkg  
 
 from sklearn.compose import ColumnTransformer
 from sklearn.linear_model import LogisticRegression
@@ -24,20 +24,22 @@ from sklearn.tree import DecisionTreeClassifier, export_graphviz
 
 
 # ----------------------------- Data ----------------------------- #
-def load_penguins(cache: str = ".cache") -> pd.DataFrame:
+def get_penguins_df(cache: str = ".cache") -> pd.DataFrame:
+    """Load penguins DataFrame; cache to .cache/penguins.csv if available."""
     p = pathlib.Path(cache) / "penguins.csv"
     if p.exists():
         return pd.read_csv(p)
     p.parent.mkdir(parents=True, exist_ok=True)
-    df = load_penguins()
+    df = _load_penguins_pkg()           
     df.to_csv(p, index=False)
     return df
 
 
 def penguins_head(n: int = 5):
     """Return (rows, columns) for template preview."""
-    df = load_penguins().dropna().head(n)
-    rows = df.values.tolist()
+    df = get_penguins_df().dropna().head(n).copy()
+    df = df.where(pd.notna(df), None)
+    rows = df.astype(object).values.tolist()
     cols = df.columns.tolist()
     return rows, cols
 
@@ -53,7 +55,7 @@ def train_tree(
     Decision Tree with cost-complexity parameter ccp_alpha = λ.
     Returns accuracy, #leaves, image URL, and the fitted pipeline.
     """
-    df = load_penguins().dropna()
+    df = get_penguins_df().dropna()
     X = df.drop("species", axis=1)
     y = df["species"]
 
@@ -138,7 +140,7 @@ def train_logreg(*, lam: float, media_dir: pathlib.Path):
     Multinomial logistic regression with sparsity via L1 (λ → C).
     lam = 0 ⇒ effectively L2.
     """
-    df = load_penguins().dropna()
+    df = get_penguins_df().dropna()
     X = df.drop("species", axis=1)
     y = df["species"]
 
