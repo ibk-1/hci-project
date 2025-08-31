@@ -174,4 +174,4 @@ cython_debug/
 .pypirc
 
 venv/*
-media/*
+.DS_Store
