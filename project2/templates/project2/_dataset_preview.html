@@ -1,0 +1,15 @@
+<div id="dataset-preview">
+  <h4>Your dataset (first 5 rows)</h4>
+  <table class="table table-sm">
+    <thead><tr><th>#</th><th>Label</th><th>Snippet</th></tr></thead>
+    <tbody>
+      {% for row in head %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td>{{ row.label }}</td>
+          <td>{{ row.snippet }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

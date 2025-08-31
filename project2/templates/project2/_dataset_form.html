@@ -1,0 +1,18 @@
+{% comment %}
+Rendered inside #dataset-preview.
+Adds hx-encoding so HTMX sends a proper multipart/form-data payload.
+{% endcomment %}
+<form id="upload-form"
+      hx-post="{% url 'project2:upload_dataset' %}"
+      hx-target="#dataset-preview"
+      hx-swap="outerHTML"
+      hx-encoding="multipart/form-data"           
+      enctype="multipart/form-data">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button class="btn btn-secondary" type="submit">Upload CSV</button>
+</form>
+
+{% if error %}
+  <div class="alert alert-danger mt-2">{{ error }}</div>
+{% endif %}

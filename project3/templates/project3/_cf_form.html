@@ -1,0 +1,6 @@
+<form hx-post="{% url 'project3:counterfactual' %}"
+      hx-target="#cf-panel" hx-swap="innerHTML">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button class="btn btn-success">Find counterfactuals</button>
+</form>

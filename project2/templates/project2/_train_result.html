@@ -1,0 +1,8 @@
+{% comment %}swapped into #train-results by HTMX or rendered after reload{% endcomment %}
+<div class="alert alert-success">
+  Training finished —
+  Test accuracy: <strong>{{ accuracy|floatformat:2 }}</strong>
+</div>
+
+<h5>Classification report</h5>
+<pre class="bg-light p-3 rounded border">{{ report }}</pre>

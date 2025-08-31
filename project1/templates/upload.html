@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}Project 1 · Upload & Train{% endblock %}
+
+{% block extra_css %}
+<style>
+  .section-title { font-weight: 600; margin-top: 2rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const problemSelect = document.getElementById("problem_type");
+  const modelSelect = document.getElementById("model_choice");
+  const models = {
+    "classification": [
+      {value: "logreg", text: "Logistic Regression"},
+      {value: "rf", text: "Random Forest"},
+      {value: "svm", text: "SVM"}
+    ],
+    "regression": [
+      {value: "linreg", text: "Linear Regression"},
+      {value: "ridge", text: "Ridge"},
+      {value: "tree", text: "Decision Tree"}
+    ]
+  };
+  if (problemSelect) {
+    problemSelect.addEventListener("change", function() {
+      const selectedType = this.value;
+      modelSelect.innerHTML = "";
+      models[selectedType].forEach(m => {
+        const opt = document.createElement("option");
+        opt.value = m.value; opt.textContent = m.text;
+        modelSelect.appendChild(opt);
+      });
+    });
+    problemSelect.dispatchEvent(new Event("change"));
+  }
+
+  const trainForm = document.getElementById("train-form");
+  if (trainForm) {
+    trainForm.addEventListener("submit", function() {
+      document.getElementById("training-loader").style.display = "block";
+    });
+  }
+});
+</script>
+
+<div class="container py-4">
+
+  <h1 class="mb-4 text-center">Project 1 — Automated Machine Learning</h1>
+  {% if using_sample %}
+  <div class="alert alert-info py-2 mb-3">
+    Using built-in <strong>sample dataset</strong> (Iris). 
+    <a class="alert-link" href="?sample=1">Reset sample</a> or upload your own CSV below.
+  </div>
+{% endif %}
+
+<div class="alert alert-secondary mb-4">
+  <h5 class="mb-1">About this page</h5>
+  <p class="mb-1">
+    This tool lets you explore datasets and quickly try out machine learning models.
+  </p>
+  <ul class="mb-1">
+    <li>By default, a <strong>sample dataset</strong> (Iris) is already loaded so you can see the features and target column immediately.</li>
+    <li>You can also <strong>upload your own CSV</strong> to analyze instead.</li>
+    <li>After uploading, the page shows:
+      <ul>
+        <li>Data preview (first rows)</li>
+        <li>Summary statistics</li>
+        <li>Missing value counts</li>
+      </ul>
+    </li>
+    <li>Select a <strong>target variable</strong> to analyze correlations and scatter plots.</li>
+    <li>Finally, you can <strong>train a model</strong> by choosing:
+      <ul>
+        <li>Problem type: classification or regression</li>
+        <li>Algorithm: e.g. Logistic Regression, Random Forest, SVM, Linear Regression, etc.</li>
+        <li>Train/test split ratio</li>
+      </ul>
+    </li>
+    <li>The page will display a <strong>training report</strong> with metrics like accuracy, precision/recall (for classification), or MSE and R² (for regression).</li>
+  </ul>
+</div>
+
+
+
+  <!-- Upload Form -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <h5 class="card-title">Upload a CSV File</h5>
+      <form method="post" enctype="multipart/form-data" class="mt-2">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-dark">Upload</button>
+      </form>
+      {% if error %}
+        <div class="alert alert-danger mt-3">{{ error }}</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Data Preview -->
+  {% if df_head %}
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <h5 class="card-title">Data Preview</h5>
+        <div class="table-responsive">{{ df_head|safe }}</div>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Descriptive Stats -->
+  {% if df_desc %}
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <h5 class="card-title">Descriptive Statistics</h5>
+        <div class="table-responsive">{{ df_desc|safe }}</div>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Null Counts -->
+  {% if df_nulls %}
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <h5 class="card-title">Null Value Count</h5>
+        <div class="table-responsive">{{ df_nulls|safe }}</div>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Target selection -->
+  {% if columns %}
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <h5 class="card-title">Select Target Variable</h5>
+        <form method="post" enctype="multipart/form-data" class="d-flex gap-2 align-items-center mt-2">
+          {% csrf_token %}
+          <input type="hidden" name="file_uploaded" value="true">
+          <select name="target_col" class="form-select" required>
+            {% for col in columns %}
+              <option value="{{ col }}">{{ col }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" name="action" value="analyze" class="btn btn-success">Analyze Target</button>
+        </form>
+
+        <!-- Train button -->
+        <div class="mt-3">
+          <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#trainModal">
+            Train Model
+          </button>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Correlation heatmap -->
+  {% if corr_plot_url %}
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <h5 class="card-title">Correlation Heatmap</h5>
+        <img src="{{ corr_plot_url }}" class="img-fluid rounded border" alt="Correlation Heatmap">
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Scatter plots -->
+   {% if scatter_plots %}
+    <h3>Scatter Plots (features vs target)</h3>
+    {% for plot_url in scatter_plots %}
+      <img src="{{ plot_url }}" class="img-fluid mb-3" alt="Feature Scatter">
+    {% endfor %}
+  {% endif %}
+
+  <!-- Training Report -->
+  {% if training_report %}
+    <div class="card shadow-sm mt-4">
+      <div class="card-body">
+        <h5 class="card-title">Training Report</h5>
+        <pre class="bg-light p-3 border rounded">{{ training_report }}</pre>
+      </div>
+    </div>
+  {% endif %}
+
+</div>
+
+<!-- Training Modal -->
+<div class="modal fade" id="trainModal" tabindex="-1" aria-labelledby="trainModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" id="train-form">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="train">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="trainModalLabel">Model Training Setup</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+
+          <div class="mb-3">
+            <label for="target_col_modal" class="form-label">Target Column</label>
+            <select name="target_col" id="target_col_modal" class="form-select" required>
+              {% for col in columns %}
+                <option value="{{ col }}">{{ col }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="problem_type" class="form-label">Problem Type</label>
+            <select name="problem_type" id="problem_type" class="form-select" required>
+              <option value="classification">Classification</option>
+              <option value="regression">Regression</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="model_choice" class="form-label">Model</label>
+            <select name="model_choice" id="model_choice" class="form-select" required></select>
+          </div>
+
+          <div class="mb-3">
+            <label for="split_ratio" class="form-label">Train/Test Split (e.g., 0.2)</label>
+            <input type="number" step="0.01" min="0.1" max="0.9" name="split_ratio" class="form-control" required>
+          </div>
+
+          <div id="training-loader" style="display:none;" class="text-center text-secondary">
+            <div class="spinner-border" role="status"></div>
+            <div class="mt-2">Training model, please wait...</div>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Start Training</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+

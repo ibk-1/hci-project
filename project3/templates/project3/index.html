@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Project 3 · Explainable Models{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <h1 class="mb-4 text-center">Project 3 — Explainability Demo</h1>
+  <div class="alert alert-secondary mb-4">
+  <h5 class="mb-1">About this page</h5>
+  <p class="mb-1">
+    This tool demonstrates <strong>explainable machine learning models</strong> and how we can explore their decisions.
+  </p>
+  <ul class="mb-1">
+    <li>A built-in dataset is already loaded for you to experiment with.</li>
+    <li>You can train a <strong>decision tree</strong> (or similar interpretable model) by adjusting parameters like <em>max depth</em> and regularization strength (<code>λ</code>).</li>
+    <li>The system will show a <strong>classification report</strong> and tree explanations after training.</li>
+    <li>In addition, there is a <strong>Counterfactual Explorer</strong> — it lets you modify feature values and see how predictions would change if the input were different.</li>
+    <li>This helps illustrate how explainable models provide not just predictions, but also insights into <em>why</em> a decision was made and how it could change.</li>
+  </ul>
+</div>
+
+
+  <!-- Dataset preview -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <h5 class="card-title">Dataset Preview (first 5 rows)</h5>
+      <div class="table-responsive">
+        <table class="table table-sm table-striped">
+          <thead>
+            <tr>
+              {% for c in head_cols %}<th>{{ c }}</th>{% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in head_rows %}
+              <tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Training form -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <h5 class="card-title">Train Decision Tree / Explainable Model</h5>
+      <form hx-post="{% url 'project3:train_tree' %}"
+            hx-target="#result" hx-swap="innerHTML" hx-indicator="#overlay">
+        {% csrf_token %}
+
+        <div class="mb-3">
+          <label class="form-label">{{ form.model.label }}</label>
+          {{ form.model }}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">{{ form.max_depth.label }}</label>
+          {{ form.max_depth }}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">{{ form.lam.label }}</label>
+          {{ form.lam }}
+          <output class="ms-2">{{ form.lam.value }}</output>
+        </div>
+
+        <button class="btn btn-primary">Train model</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- overlay spinner -->
+  <style>
+    #overlay.htmx-request {
+      position: fixed;
+      inset: 0;
+      background: rgba(255, 255, 255, .6);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1050;
+    }
+  </style>
+  <div id="overlay" class="htmx-indicator">
+    <div class="spinner-border" role="status" style="width:3rem;height:3rem;"></div>
+    <p class="mt-2 fw-semibold">Training…</p>
+  </div>
+
+  <!-- Result area -->
+  <div id="result" class="mt-4"></div>
+
+  <div class="alert alert-secondary mb-3">
+  <h6 class="mb-1">About Counterfactual Explanations</h6>
+  <p class="mb-1">
+    Counterfactuals show how a model’s prediction would change if certain input
+    features were slightly different. 
+  </p>
+  <ul class="mb-1">
+    <li><strong>Original</strong> row = the actual input and prediction.</li>
+    <li><strong>CF1, CF2, CF3</strong> = alternative versions of the same input with
+        minimal feature changes that flip the prediction.</li>
+    <li><span style="color:green;">Green ↑</span> = feature increased, 
+        <span style="color:red;">Red ↓</span> = feature decreased.</li>
+    <li>This helps answer the question: 
+        <em>“What would need to change for this example to be classified differently?”</em></li>
+  </ul>
+</div>
+
+  <!-- Counterfactual explorer -->
+  <div class="card shadow-sm mt-4">
+    <div class="card-body">
+      <h5 class="card-title">Counterfactual Explorer</h5>
+      <div id="cf-panel">
+        <button class="btn btn-outline-secondary"
+                hx-get="{% url 'project3:counterfactual' %}"
+                hx-target="#cf-panel" hx-swap="innerHTML">
+          Open explorer
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

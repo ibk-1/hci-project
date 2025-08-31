@@ -1,0 +1,45 @@
+{% extends "project5/base.html" %}
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h5 class="card-title mb-3">Trainer</h5>
+
+    <div class="d-flex flex-wrap gap-2 mb-3">
+      <button class="btn btn-dark btn-sm" onclick="start('reinforce')">Start REINFORCE (quick)</button>
+      <button class="btn btn-secondary btn-sm" onclick="start('reward')">Train Reward (from labels)</button>
+      <button class="btn btn-primary btn-sm" onclick="start('rlhf')">Start RLHF Fine-tune</button>
+      <a class="btn btn-outline-secondary btn-sm" href="{% url 'project5:label' %}">Open Labeling UI</a>
+    </div>
+
+    <div id="jobs"></div>
+  </div>
+</div>
+
+<script>
+async function start(kind) {
+  const res = await fetch("{% url 'project5:api_train_start' %}", {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({kind})
+  });
+  const data = await res.json();
+  addJob(data.id);
+}
+
+async function addJob(id) {
+  const box = document.createElement('div');
+  box.className = "border rounded p-2 mb-2";
+  box.innerHTML = `<div class="small">Job #${id} — <span id="st${id}">pending</span></div>
+                   <pre id="lg${id}" class="small mb-0" style="white-space:pre-wrap; max-height:220px; overflow:auto;"></pre>`;
+  document.getElementById('jobs').prepend(box);
+  poll(id);
+}
+
+async function poll(id) {
+  const res = await fetch("{% url 'project5:api_train_status' job_id=0 %}".replace("0", id));
+  const j = await res.json();
+  document.getElementById('st'+id).textContent = j.status;
+  document.getElementById('lg'+id).textContent = j.logs || "";
+  if (j.status === "running" || j.status === "pending") setTimeout(() => poll(id), 1000);
+}
+</script>
+{% endblock %}

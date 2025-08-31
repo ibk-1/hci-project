@@ -1,0 +1,31 @@
+{% if error %}
+  <div class="alert alert-danger">{{ error }}</div>
+{% else %}
+  {% if model == "tree" %}
+    <div class="alert alert-info">
+      Test accuracy <strong>{{ accuracy|floatformat:2 }}</strong> —
+      Leaves <strong>{{ leaves }}</strong> <br>
+      depth = {{ depth }}, λ = {{ lam }}
+    </div>
+    <img src="{{ img_url }}" class="img-fluid border rounded shadow"
+         alt="Decision tree">
+  {% elif model == "logreg" %}
+    <div class="alert alert-info">
+      Test accuracy <strong>{{ accuracy|floatformat:2 }}</strong> —
+      Non-zero weights <strong>{{ nonzero }}</strong><br>
+      λ = {{ lam }}
+    </div>
+  {% endif %}
+
+  <!-- metrics card … -->
+
+<!-- OOB fragment to reset the explorer -->
+<div hx-swap-oob="true" id="cf-panel">
+  <button class="btn btn-outline-secondary"
+          hx-get="{% url 'project3:counterfactual' %}"
+          hx-target="#cf-panel" hx-swap="innerHTML">
+    Open explorer
+  </button>
+</div>
+
+{% endif %}

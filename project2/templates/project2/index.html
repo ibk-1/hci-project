@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Project 2 – Active Learning{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+
+
+<h1 class="mb-3">Project 2 – Active Learning for Sentiment Analysis</h1>
+
+<div class="alert alert-secondary mb-4">
+  <h5 class="mb-1">About this page</h5>
+  <p class="mb-1">
+    This tool demonstrates <strong>active learning</strong> for text classification.
+  </p>
+  <ul class="mb-1">
+    <li>By default, a <strong>sample IMDB dataset</strong> of movie reviews is loaded (text + sentiment label).</li>
+    <li>You can also <strong>upload your own dataset</strong> in CSV format (<code>text,label</code> columns).</li>
+    <li><strong>Full training:</strong> Train a classifier (Logistic Regression or SVM) with chosen text representation (Bag-of-Words / TF-IDF), and view accuracy + classification report.</li>
+  </ul>
+</div>
+
+
+<p class="alert alert-secondary">
+  The baseline classifier encodes reviews with <strong>TF-IDF bigrams</strong> and
+  predicts sentiment using <strong>Logistic Regression</strong>. You can switch to
+  <em>DistilBERT embeddings</em> or a <em>Linear SVM</em> below.
+</p>
+
+<!-- ───── DATASET upload / preview ───── -->
+<div id="dataset-preview">
+  {% if head %}
+    <!-- preview table -->
+    {% include "project2/_dataset_preview.html" with head=head %}
+    <!-- always show a tiny re-upload button -->
+    <button class="btn btn-outline-secondary btn-sm mt-2"
+            onclick="document.getElementById('reupload').classList.toggle('d-none')">
+      Upload new CSV
+    </button>
+    <div id="reupload" class="d-none mt-2">
+      {% include "project2/_dataset_form.html" with form=upform %}
+    </div>
+  {% else %}
+    <p>No dataset uploaded yet.</p>
+    {% include "project2/_dataset_form.html" with form=upform %}
+  {% endif %}
+</div>
+<hr>
+<div class="d-flex gap-2 mb-3">
+  <a class="btn btn-warning" href="{% url 'project2:active_learning' %}">
+    Go to Active Learning
+  </a>
+</div>
+
+<!-- ───── Train-full form ───── -->
+<form id="train-form"
+      action="{% url 'project2:train_full' %}"
+      method="post"
+      hx-post="{% url 'project2:train_full' %}"
+      hx-target="#train-results"
+      hx-swap="innerHTML"
+      hx-indicator="#overlay">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button class="btn btn-primary" type="submit">Train model</button>
+</form>
+
+<!-- ───── Training overlay ───── -->
+<style>
+  #overlay.htmx-request{
+    position:fixed;inset:0;background:rgba(255,255,255,.6);
+    display:flex;flex-direction:column;justify-content:center;align-items:center;
+    z-index:1050;
+  }
+</style>
+<div id="overlay" class="htmx-indicator">
+  <div class="spinner-border" role="status" style="width:3rem;height:3rem;"></div>
+  <p class="mt-3 fs-5 fw-semibold">Training… please wait</p>
+</div>
+
+<!-- ───── Results placeholder ───── -->
+<div id="train-results" class="mt-4">
+  {% if accuracy and report %}
+    {% include "project2/_train_result.html" with accuracy=accuracy report=report %}
+  {% endif %}
+</div>
+
+</div>
+{% endblock %}

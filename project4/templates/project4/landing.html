@@ -1,0 +1,33 @@
+{% extends "project4/base.html" %}
+{% block title %}Landing · HCAI Project 4{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">About this project</h5>
+        <p class="card-text small text-secondary">
+          Interactive cold-start recommendation with guided active learning and “influence previews”.
+          Rate a few movies and see how each answer changes your future recommendations.
+        </p>
+        <ul class="small">
+          <li>Task 1: Guided active learning & effect previews.</li>
+          <li>Task 2: User study design.</li>
+          <li>Task 3: Study interface.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Get started</h5>
+        <a href="{% url 'project4:study' %}" class="btn btn-dark btn-sm">▶ Start the Study</a>
+        <p class="small text-secondary mt-2 mb-0">
+          Export your report PDF separately and link it here if needed.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

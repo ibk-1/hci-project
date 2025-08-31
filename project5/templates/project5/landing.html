@@ -1,0 +1,34 @@
+{% extends "project5/base.html" %}
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h5 class="card-title">Reinforcement Learning with Human Feedback</h5>
+    <div class="alert alert-secondary mb-4">
+  <h5 class="mb-1">About this page</h5>
+  <p class="mb-1">
+    This tool demonstrates <strong>Reinforcement Learning with Human Feedback (RLHF)</strong> using a toy mouse-and-cheese world.
+  </p>
+  <ul class="mb-1">
+    <li>You will see two possible <strong>trajectories</strong> (A and B) of a mouse moving through a grid with walls, traps, normal cheese, and organic cheese.</li>
+    <li>Each trajectory has a <strong>return score</strong> (how well the mouse performed).</li>
+    <li>Your task is to <strong>pick the better trajectory</strong> by clicking <em>Prefer A</em> or <em>Prefer B</em>.  
+        For example, prefer the one with fewer traps or better cheese.</li>
+    <li>Click <strong>Load New Pair</strong> to see another set of trajectories and continue labeling.</li>
+    <li>After collecting enough preferences, go to the <strong>Trainer</strong> page (via the top menu) to:
+      <ul>
+        <li>Train a baseline policy (REINFORCE)</li>
+        <li>Train a reward model from your labels</li>
+        <li>Fine-tune the policy with RLHF</li>
+      </ul>
+    </li>
+    <li>This shows how human feedback (your choices) can guide a reinforcement learning agent to improve over time.</li>
+  </ul>
+</div>
+
+    <p class="text-secondary small mb-0">
+      This app trains a mouse to find cheese. We learn a policy with REINFORCE (Task 1), then
+      refine it with human preferences using a Bradley–Terry reward model and a KL penalty (Tasks 2–3).
+    </p>
+  </div>
+</div>
+{% endblock %}

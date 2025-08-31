@@ -1,0 +1,215 @@
+{% extends "project5/base.html" %}
+{% block content %}
+<style>
+    .grid5 {
+        display: grid;
+        grid-template-columns: repeat(5, 28px);
+        gap: 2px;
+    }
+
+    .cell {
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        line-height: 1;
+    }
+
+    .mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    }
+</style>
+
+<div class="d-flex gap-3">
+    <!-- Trajectory A -->
+    <div class="card flex-fill shadow-sm">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0">Trajectory A</h6>
+                <span class="badge text-bg-secondary">Return: <span id="a_ret">—</span></span>
+            </div>
+
+            <div class="mt-2 d-flex align-items-center gap-2">
+                <button id="a_play" class="btn btn-outline-secondary btn-sm">Play</button>
+                <input id="a_step" type="range" min="0" value="0" class="form-range" style="max-width:260px;">
+                <span class="small text-secondary">step <span id="a_step_lbl">0</span></span>
+            </div>
+
+            <div id="a_grid" class="grid5 mt-2"></div>
+
+            <div class="small text-secondary mt-2">
+                <span class="me-3">Cheese: <span id="a_cheese">—</span></span>
+                <span class="me-3">Bumps: <span id="a_bumps">0</span></span>
+                <span class="me-3">Traps: <span id="a_traps">0</span></span>
+            </div>
+
+            <button id="chooseA" class="btn btn-success btn-sm mt-3">Prefer A (A)</button>
+        </div>
+    </div>
+
+    <!-- Trajectory B -->
+    <div class="card flex-fill shadow-sm">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0">Trajectory B</h6>
+                <span class="badge text-bg-secondary">Return: <span id="b_ret">—</span></span>
+            </div>
+
+            <div class="mt-2 d-flex align-items-center gap-2">
+                <button id="b_play" class="btn btn-outline-secondary btn-sm">Play</button>
+                <input id="b_step" type="range" min="0" value="0" class="form-range" style="max-width:260px;">
+                <span class="small text-secondary">step <span id="b_step_lbl">0</span></span>
+            </div>
+
+            <div id="b_grid" class="grid5 mt-2"></div>
+
+            <div class="small text-secondary mt-2">
+                <span class="me-3">Cheese: <span id="b_cheese">—</span></span>
+                <span class="me-3">Bumps: <span id="b_bumps">0</span></span>
+                <span class="me-3">Traps: <span id="b_traps">0</span></span>
+            </div>
+
+            <button id="chooseB" class="btn btn-danger btn-sm mt-3">Prefer B (B)</button>
+        </div>
+    </div>
+</div>
+
+<div class="mt-3 d-flex gap-2 align-items-center">
+    <button id="loadPair" class="btn btn-outline-secondary btn-sm">Load New Pair</button>
+    <!-- <button id="skipPair" class="btn btn-outline-dark btn-sm">Skip (tie/unclear) (S)</button> -->
+    <div class="small text-secondary" id="status">Choose the better trajectory (e.g., fewer bumps, avoid traps, prefer
+        normal cheese).</div>
+</div>
+
+<hr>
+<div class="small">
+    Legend:
+    🐭 Mouse &nbsp;
+    🧀 Cheese &nbsp;
+    🥦 Organic cheese &nbsp;
+    💀 Trap &nbsp;
+    ⬛ Wall &nbsp;
+    ⬜ Empty
+</div>
+
+
+<script>
+    let curId = null;
+    let A = null, B = null;
+    let timers = { a: null, b: null };
+
+    const charMap = {
+        '.': '⬜',   // empty
+        'M': '🐭',  // mouse
+        'C': '🧀',  // normal cheese
+        'O': '🥦',  // organic cheese (you could also use 🥬 or 🥗)
+        'X': '💀',  // trap
+        '#': '⬛'    // wall
+    };
+
+    function renderGrid(containerId, ascii) {
+        const el = document.getElementById(containerId);
+        el.innerHTML = '';
+        const rows = ascii.trim().split('\n').map(line => line.trim().split(/\s+/));
+        rows.forEach(r => {
+            r.forEach(ch => {
+                const div = document.createElement('div');
+                div.className = 'cell';
+                div.textContent = charMap[ch] || '⬜';
+                el.appendChild(div);
+            });
+        });
+    }
+
+
+    function summarize(traj, prefix) {
+        // cheese preference: C > O > none
+        const cells = traj.cells || [];
+        let last = cells[cells.length - 1] ?? -1;
+        let cheese = (last === 2) ? 'Normal (C)' : (last === 5 ? 'Organic (O)' : 'None');
+        document.getElementById(prefix + '_cheese').textContent = cheese;
+
+        const bumps = (traj.bumped || []).filter(Boolean).length;
+        document.getElementById(prefix + '_bumps').textContent = bumps;
+
+        const traps = cells.filter(c => c === 3).length;
+        document.getElementById(prefix + '_traps').textContent = traps;
+    }
+
+    function bindPlayer(prefix, data) {
+        const playBtn = document.getElementById(prefix + '_play');
+        const slider = document.getElementById(prefix + '_step');
+        const stepLbl = document.getElementById(prefix + '_step_lbl');
+
+        slider.max = Math.max(0, (data.frames?.length || 1) - 1);
+        slider.value = 0;
+        stepLbl.textContent = '0';
+        renderGrid(prefix + '_grid', data.frames[0]);
+        summarize(data, prefix);
+
+        slider.oninput = () => {
+            const s = parseInt(slider.value, 10);
+            stepLbl.textContent = s;
+            renderGrid(prefix + '_grid', data.frames[s] || data.frames[data.frames.length - 1]);
+        };
+
+        playBtn.onclick = () => {
+            if (timers[prefix]) {
+                clearInterval(timers[prefix]); timers[prefix] = null; playBtn.textContent = 'Play'; return;
+            }
+            playBtn.textContent = 'Pause';
+            timers[prefix] = setInterval(() => {
+                let s = parseInt(slider.value, 10);
+                if (s >= slider.max) { clearInterval(timers[prefix]); timers[prefix] = null; playBtn.textContent = 'Play'; return; }
+                slider.value = s + 1; slider.oninput();
+            }, 400);
+        };
+    }
+
+    async function loadPair() {
+        // stop any players
+        Object.keys(timers).forEach(k => { if (timers[k]) { clearInterval(timers[k]); timers[k] = null; } });
+        document.getElementById('status').textContent = 'Loading pair...';
+        const res = await fetch("{% url 'project5:api_pair' %}", { method: "POST" });
+        const data = await res.json();
+        curId = data.id; A = data.a; B = data.b;
+
+        document.getElementById('a_ret').textContent = A.total_reward.toFixed(2);
+        document.getElementById('b_ret').textContent = B.total_reward.toFixed(2);
+
+        bindPlayer('a', A);
+        bindPlayer('b', B);
+
+        document.getElementById('status').textContent = 'Pick the better trajectory (A/B). Space=Play/Pause left, J/K step.';
+    }
+
+    async function choose(which) {
+        if (curId == null) return;
+        await fetch("{% url 'project5:api_choose' %}", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: curId, choice: which })
+        });
+        document.getElementById('status').textContent = (which === -1) ? 'Skipped. Load another pair.' : 'Saved. Load another pair!';
+        curId = null;
+    }
+
+    document.getElementById('loadPair').onclick = loadPair;
+    // document.getElementById('skipPair').onclick = () => choose(-1);
+    document.getElementById('chooseA').onclick = () => choose(0);
+    document.getElementById('chooseB').onclick = () => choose(1);
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        if (e.key.toLowerCase() === 'a') choose(0);
+        if (e.key.toLowerCase() === 'b') choose(1);
+        if (e.key.toLowerCase() === 's') choose(-1);
+        if (e.key === ' ') { e.preventDefault(); document.getElementById('a_play').click(); }
+        if (e.key.toLowerCase() === 'j') { const s = document.getElementById('a_step'); s.value = Math.max(0, parseInt(s.value) - 1); s.oninput(); }
+        if (e.key.toLowerCase() === 'k') { const s = document.getElementById('a_step'); s.value = Math.min(parseInt(s.max), parseInt(s.value) + 1); s.oninput(); }
+    });
+
+    loadPair();
+</script>
+{% endblock %}

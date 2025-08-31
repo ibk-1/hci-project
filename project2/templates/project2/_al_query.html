@@ -1,0 +1,23 @@
+<form id="label-form"
+      hx-post="{% url 'project2:active_learning' %}"
+      hx-target="#al-panel"
+      hx-swap="innerHTML"
+      hx-indicator="#al-overlay">
+  {% csrf_token %}
+  <input type="hidden" name="idx" value="{{ idx }}">
+  <blockquote class="blockquote">{{ query }}</blockquote>
+
+  <div class="form-check">
+    <input class="form-check-input" type="radio" name="label" value="1" required>
+    <label class="form-check-label">👍 positive</label>
+  </div>
+  <div class="form-check mb-3">
+    <input class="form-check-input" type="radio" name="label" value="0">
+    <label class="form-check-label">👎 negative</label>
+  </div>
+
+  <button class="btn btn-success">Submit label</button>
+  <span class="ms-3 text-muted">
+    Labelled&nbsp;{{ labelled }} &nbsp;—&nbsp; acc: {{ acc }}
+  </span>
+</form>

@@ -1,0 +1,10 @@
+<!-- keep the form so the user can query again -->
+<div hx-get="{% url 'project3:counterfactual' %}"
+     hx-target="#cf-panel"
+     hx-swap="innerHTML"
+     class="mb-2">
+  <button class="btn btn-outline-secondary btn-sm">← New query</button>
+</div>
+
+<h5>Counterfactual explanations</h5>
+{{ cf_html|safe }}
