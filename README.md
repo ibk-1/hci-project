@@ -1,6 +1,19 @@
-# HCAI Project Hub – Run Guide
+# Human-Centred AI Project Hub
 
-This repo contains all 5 projects (P1–P5) built with Django.  
+Five interactive human-in-the-loop ML projects from the Human-Centred AI course at TUHH, built as one Django web app. Each project puts a person into the ML loop: labelling, explaining, rating or giving preferences.
+
+| # | Project | What it does |
+|---|---|---|
+| P1 | **Automated ML** | Upload a dataset, train and compare models, and inspect the results as plots |
+| P2 | **Active learning for sentiment analysis** | Pool-based active learning on IMDB reviews with logistic regression / SVM; the user labels the examples the model is least sure about (uncertainty, margin and entropy sampling) |
+| P3 | **Explainability** | Optimal sparse decision trees (GOSDT) plus counterfactual explanations ("what would need to change for a different prediction?") |
+| P4 | **Recommender user study** | Movie recommendations on MovieLens from SVD item factors, with an interactive study flow and report |
+| P5 | **RLHF from scratch** | A 5×5 grid-world agent (cheese, traps, walls): REINFORCE baseline policy → reward model trained from human trajectory preferences → policy fine-tuned with the learned reward (RLHF) |
+
+**Stack:** Django, PyTorch, scikit-learn, scikit-surprise, sentence-transformers, pandas, matplotlib.
+
+# Run guide
+
 Follow the steps below to set it up and run.
 
 ---
